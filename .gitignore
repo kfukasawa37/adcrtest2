@@ -3,10 +3,16 @@
 .Rapp.history
 
 # Session Data files
-.RData
+*.RData
+*.rds
 
 # User-specific files
 .Ruserdata
+*.Rold
+*.Rprivate
+
+#output files
+*.pdf
 
 # Example code in package build process
 *-Ex.R
