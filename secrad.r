@@ -1523,7 +1523,7 @@ R6Class("secrad_data",
 			ggplot()+geom_tile(aes(x=x,y=y,fill=z),data=tiledata, width=self$resolution["x"], height=self$resolution["y"])+
 				geom_point(data=alltrap,aes(x=x,y=y),size=3,pch=0,stroke=1.5)+
 				geom_sf(data=inddetect,aes(col=as.character(ind)),show.legend = FALSE)+
-				geom_sf(data=inddetect%>%st_drop_geometry%>%select(ind,chull)%>%st_as_sf,aes(col=as.character(ind)),fill=NA,show.legend = FALSE)+
+				geom_sf(data=inddetect%>%st_drop_geometry%>%dplyr::select(ind,chull)%>%st_as_sf,aes(col=as.character(ind)),fill=NA,show.legend = FALSE)+
 				scale_fill_gradientn(colours = rev(terrain.colors(20))[-1])+
 				labs(fill = covname)+
 				theme_cowplot()
@@ -1661,7 +1661,7 @@ ggsecraddata<-function(addata,covname=NULL,jitter=0,sample=1){
 	ggplot()+geom_tile(aes(x=x,y=y,fill=z),data=tiledata)+
 		geom_point(data=alltrap,aes(x=x,y=y),size=3,pch=0,stroke=1.5)+
 		geom_sf(data=inddetect,aes(col=as.character(ind)),show.legend = FALSE)+
-		geom_sf(data=inddetect%>%st_drop_geometry%>%select(ind,chull)%>%st_as_sf,aes(col=as.character(ind)),fill=NA,show.legend = FALSE)+
+		geom_sf(data=inddetect%>%st_drop_geometry%>%dplyr::select(ind,chull)%>%st_as_sf,aes(col=as.character(ind)),fill=NA,show.legend = FALSE)+
 		scale_fill_gradientn(colours = rev(terrain.colors(20))[-1])+
 		labs(fill = covname)+
 		theme_cowplot()

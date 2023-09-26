@@ -490,6 +490,31 @@ j<-1522
 plot_hr_SCRed;ggsave(paste0("plot_hr_SCRLCP",format(Sys.time(), "%Y%m%d%H%M"),".pdf"),device="pdf",width=23,height=8,units="cm")
 
 
+###Fig.1
+i<-1;
+plotpar<-truepar_estim[,i]
+ncand<-6
+con1cand<-seq(0,2.5,length=ncand)
+plotdata<-tibble(beta=NULL,x=NULL,y=NULL,Probability=NULL)
+  #tibble(model=rep(c("True","Predicted by SCR-LCP","Predicted by ADCR"),each=ncell),x=rep(xcoord,3),y=rep(ycoord,3),Probability=c(true_hr[j,],SCRed_hr[j,],secrad_hr[j,]))
+k<-1525
+for(j in 1:ncand){
+  plotpar[2]<-2.5
+  plotpar[3]<-con1cand[j]
+  hrexample<-matrix(exp(actcent(plotpar,secrad_list[[i]],Nhat=FALSE,Utility=FALSE)$logp_arr),ncell,ncell)
+  temp<-tibble(beta=paste0("β = ",con1cand[j]),x=xcoord,y=ycoord,Probability=hrexample[k,])
+  plotdata<-bind_rows(plotdata,temp)
+}
+
+plot_hrexample<-ggplot()+geom_tile(data=plotdata,aes(x=x,y=y,fill=Probability))+facet_wrap(~beta)+
+  geom_point(data=data.frame(sim_list[[i]]$coords)[k,,drop=F],aes(x=x,y=y),col="red",pch=4)+
+  geom_point(data=data.frame(sim_list[[i]]$coords,Hab=sim_list[[i]]$grid_cov$X)%>%filter(Hab==0.5),aes(x=x,y=y),size=0.005,stroke=0.4)+
+  scale_fill_viridis(begin=0.1)+
+  xlab("")+ylab("")+
+  theme_cowplot()
+
+plot_hrexample;ggsave(paste0("plot_hrexample",format(Sys.time(), "%Y%m%d%H%M"),".pdf"),device="pdf",width=20,height=13,units="cm")
+
 ###Table 1
 rmse_dens_all<-SCRed_tibble%>%
   bind_cols(secr_dens_bias=secr_dens-truepar_estim[1,])%>%

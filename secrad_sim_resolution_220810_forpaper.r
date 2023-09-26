@@ -13,7 +13,7 @@ library(vegan)
 load("secrad_sim_220811.Rdata")	
 
 
-sourcepath<-ifelse(version$os=="mingw32","L:/secradsim/secrad.r","/L/secradsim/secrad.r")
+sourcepath<-"secrad.r"
 source(sourcepath)
 
 #####resolution down
