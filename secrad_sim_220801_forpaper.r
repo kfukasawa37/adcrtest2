@@ -497,7 +497,7 @@ ncand<-6
 con1cand<-seq(0,2.5,length=ncand)
 plotdata<-tibble(beta=NULL,x=NULL,y=NULL,Probability=NULL)
   #tibble(model=rep(c("True","Predicted by SCR-LCP","Predicted by ADCR"),each=ncell),x=rep(xcoord,3),y=rep(ycoord,3),Probability=c(true_hr[j,],SCRed_hr[j,],secrad_hr[j,]))
-k<-1525
+k<-726
 for(j in 1:ncand){
   plotpar[2]<-2.5
   plotpar[3]<-con1cand[j]
@@ -506,14 +506,17 @@ for(j in 1:ncand){
   plotdata<-bind_rows(plotdata,temp)
 }
 
-plot_hrexample<-ggplot()+geom_tile(data=plotdata,aes(x=x,y=y,fill=Probability))+facet_wrap(~beta)+
+plot_hrexample<-ggplot()+geom_tile(data=plotdata,aes(x=x,y=y,fill=Probability))+facet_wrap(~beta,nrow=1)+
   geom_point(data=data.frame(sim_list[[i]]$coords)[k,,drop=F],aes(x=x,y=y),col="red",pch=4)+
   geom_point(data=data.frame(sim_list[[i]]$coords,Hab=sim_list[[i]]$grid_cov$X)%>%filter(Hab==0.5),aes(x=x,y=y),size=0.005,stroke=0.4)+
   scale_fill_viridis(begin=0.1)+
   xlab("")+ylab("")+
-  theme_cowplot()
+  theme_cowplot()+ 
+  scale_x_continuous(expand=c(0.03,0.03))+ 
+  scale_y_continuous(expand=c(0.03,0.03))+
+  theme(panel.spacing = unit(0, "cm"),plot.margin = margin(0,0,0,0,unit="cm"))
 
-plot_hrexample;ggsave(paste0("plot_hrexample",format(Sys.time(), "%Y%m%d%H%M"),".pdf"),device="pdf",width=20,height=13,units="cm")
+plot_hrexample;ggsave(paste0("plot_hrexample",format(Sys.time(), "%Y%m%d%H%M"),".pdf"),device="pdf",width=29,height=6,units="cm")
 
 ###Table 1
 rmse_dens_all<-SCRed_tibble%>%
