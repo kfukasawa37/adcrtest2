@@ -514,7 +514,7 @@ Rcpp::List advdiff_t_core(const VectorXd T,
 	int ncoord=p0.size();
 	Rcpp::List res(2);
 	MatrixXd resprob(ncoord,niter);
-	VectorXd resloc(niter);
+	VectorXi resloc(niter);
 	VectorXd pt(ncoord);
 	double dt;
 	SparseMatrix<double, ColMajor> advneighx, advneighy, difdiagx, difdiagy,temp1,advdiff;
@@ -586,7 +586,7 @@ Rcpp::List advdiff_t_core(const VectorXd T,
 			mprob[k]=pt(k);
 		}
 		d.push_back(discrete_distribution<std::size_t> (mprob.begin(),mprob.end()));
-		resloc(j) = d[j](engine);
+		resloc(j) = (int)d[j](engine);
 		resprob.col(j) = pt;
 		pt=VectorXd::Zero(ncoord);
 		pt(resloc(j)) = 1;

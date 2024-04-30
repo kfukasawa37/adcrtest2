@@ -423,7 +423,7 @@ for(i in 1:niter){
 	hrtest$OVER_secrad[i]<-mean(apply(pmin(secrad_hr[ingrid,],true_hr[ingrid,]),1,sum))
 }
 
-plotdata<-bind_cols(Model=rep(c("SCR-LCP","ADCR"),each=niter),MSE=c(hrtest$MSE_SCRed,hrtest$MSE_secrad),OVER=c(hrtest$OVER_SCRed,hrtest$OVER_secrad),true_con=rep(SCRed_tibble$true_con,2),valid=c(SCRed_tibble$SCRed_valid,rep(TRUE,niter)))
+plotdata<-bind_cols(Model=rep(c("SCR with the\n least-cost path","ADCR"),each=niter),MSE=c(hrtest$MSE_SCRed,hrtest$MSE_secrad),OVER=c(hrtest$OVER_SCRed,hrtest$OVER_secrad),true_con=rep(SCRed_tibble$true_con,2),valid=c(SCRed_tibble$SCRed_valid,rep(TRUE,niter)))
 	
 plot_overlap_SCRed<-ggplot()+geom_point(data=plotdata%>%filter(valid),aes(x=true_con,y=OVER,col=Model))+
 	geom_point(data=plotdata%>%filter(valid)%>%filter(Model=="SCR-LCP"),aes(x=true_con,y=OVER,col=Model),size=2)+
@@ -432,7 +432,7 @@ plot_overlap_SCRed<-ggplot()+geom_point(data=plotdata%>%filter(valid),aes(x=true
 	scale_color_manual(values=c("black","gray"))+
 	xlab("True effect of landscape")+ylab("Overlap of predicted\n and true home ranges")
 
-plot_overlap_SCRed;ggsave(paste0("plot_overlap_SCRed_",format(Sys.time(), "%Y%m%d%H%M"),".pdf"),device="pdf",width=12,height=8,units="cm")
+plot_overlap_SCRed;ggsave(paste0("plot_overlap_SCRed_",format(Sys.time(), "%Y%m%d%H%M"),".pdf"),device="pdf",width=13,height=8,units="cm")
 
 
 plotdata<-bind_cols(model=rep(c("SCRed","secrad"),each=niter),MSE=c(hrtest$MSE_SCRed,hrtest$MSE_secrad),OVER=c(hrtest$OVER_SCRed,hrtest$OVER_secrad),true_con=rep(SCRed_tibble$true_con,2),valid=c(SCRed_tibble$SCRed_valid,rep(TRUE,niter)))
