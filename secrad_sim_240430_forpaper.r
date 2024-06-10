@@ -173,6 +173,12 @@ plot_estim;ggsave(paste0("plot_estim_",format(Sys.time(), "%Y%m%d%H%M"),".pdf"),
 
 RMSE_g0<-sqrt(mean((res_wide$mle_g0-res_wide$true_g0)^2))
 MBE_g0<-mean(res_wide$mle_g0-res_wide$true_g0)
+
+#sign
+s1<-res_tidy%>%filter(parname=="con1")%>%select(true)%>%unlist%>%sign
+s2<-res_tidy%>%filter(parname=="con1")%>%mutate(s2=(sign(lci)+sign(uci))/2)%>%select(s2)%>%unlist
+table(bind_cols(s1=s1,s2=s2))
+
 ################plot
 
 i<-96;sim_list[[i]]$ggsecraddata(covname="X",sample=1);sim_list[[i]]$truemodel
@@ -310,11 +316,11 @@ SCRed_con_se<-SCRed_covmat_list%>%
 				unlist%>%
 				sqrt
 
-SCRed_dens_se<-SCRed_covmat_list%>%
+SCRed_dens_se<-(SCRed_covmat_list%>%
 				lapply(function(...){try("["(...))},3,3)%>%
 				lapply(function(x){ifelse(is.numeric(x),x,NA)})%>%
 				unlist%>%
-				sqrt
+				sqrt)*exp(unlist(SCRedreslist%>%lapply("[[","par")%>%lapply("[",3)))/(exp(unlist(SCRedreslist%>%lapply("[[","par")%>%lapply("[",3)))+sapply(sim_list,"[[","nind"))
 
 
 SCRed_tibble<-tibble(true_con=truepar_estim[3,],SCRed_con=SCRed_con,SCRed_con_se=SCRed_con_se,SCRed_valid=SCRed_valid,true_dens=truepar_estim[1,],SCRed_dens=SCRed_dens,SCRed_dens_se=SCRed_dens_se,secrad_dens=par_estim[1,])%>%
@@ -344,6 +350,10 @@ plot_SCReddens<-ggplot(data=plotdata%>%filter(model=="SCRed"))+geom_point(aes(x=
 	
 plot_SCReddens;ggsave(paste0("plot_dens_SCRLCP_",format(Sys.time(), "%Y%m%d%H%M"),".pdf"),device="pdf",width=9,height=8,units="cm")
 
+#
+s1<-SCRed_tibble$true_con%>%sign
+s2<-SCRed_tibble%>%mutate(s2=(sign(SCRed_con_lci)+sign(SCRed_con_uci))/2)%>%select(s2)%>%unlist
+table(bind_cols(s1=s1,s2=s2))
 
 #compare distance
 costdist<-function(alpha2,cov,G1,G2=NULL,directions=16){
@@ -599,7 +609,7 @@ plot_current;ggsave(paste0("plot_current",format(Sys.time(), "%Y%m%d%H%M"),".pdf
 
 ###Comparison with 1/2 resolution scenario
 reso<-new.env()
-load("secrad_sim_SCRed_reso_220812.Rdata",envir=reso)
+load("secrad_sim_reso_240610.Rdata",envir=reso)
 
 
 res_wide_reso<-get("res_wide",pos=reso)
@@ -609,16 +619,6 @@ colnames(res_wide_reso)<-paste0("reso_",colnames(res_wide_reso))
 res_wide_all<-res_wide%>%select(mle_con1,lci_con1,uci_con1,mle_dens,se_dens,lci_dens,uci_dens)%>%
 				bind_cols(res_wide_reso)
 
-SCRed_tibble_reso<-get("SCRed_tibble",pos=reso)
-SCRed_tibble_reso<-SCRed_tibble_reso%>%
-					select(SCRed_con,SCRed_con_se,SCRed_con_lci,SCRed_con_uci,SCRed_dens,SCRed_dens_lci,SCRed_dens_uci)
-colnames(SCRed_tibble_reso)<-paste0("reso_",colnames(SCRed_tibble_reso))
-
-SCRed_tibble_all<-SCRed_tibble%>%
-				select(SCRed_con,SCRed_con_lci,SCRed_con_uci,SCRed_dens,SCRed_dens_lci,SCRed_dens_uci)%>%
-				bind_cols(SCRed_tibble_reso)
-
-prinaxis_con_SCRed<-sma(SCRed_con~reso_SCRed_con,data=SCRed_tibble_all,V=cbind(SCRed_con_se^2,reso_SCRed_con_se^2))$coef[[1]]
 prinaxis_con_ADCR<-sma(mle_con1~reso_mle_con1,data=res_wide_all,V=cbind(se_con1^2,reso_se_con1^2))$coef[[1]]
 
 plot_half_con_ADCR<-ggplot(res_wide_all,aes(x=reso_mle_con1,y=mle_con1))+
@@ -631,20 +631,6 @@ plot_half_con_ADCR<-ggplot(res_wide_all,aes(x=reso_mle_con1,y=mle_con1))+
 	
 plot_half_con_ADCR;ggsave(paste0("plot_half_con_ADCR",format(Sys.time(), "%Y%m%d%H%M"),".pdf"),device="pdf",width=10,height=8,units="cm")
 
-
-plot_half_con_SCRed<-ggplot(SCRed_tibble_all,aes(x=reso_SCRed_con,y=SCRed_con))+
-  geom_abline(slope=prinaxis_con_SCRed[2,1],intercept=prinaxis_con_SCRed[1,1],size=1,col="gray")+
-  geom_errorbar(aes(x=reso_SCRed_con,ymin=SCRed_con_lci,ymax=SCRed_con_uci),size=0.05)+
-	geom_errorbar(aes(y=SCRed_con,xmin=reso_SCRed_con_lci,xmax=reso_SCRed_con_uci),size=0.05)+
-	geom_abline(slope=1)+
-  geom_point(size=0.5)+
-	theme_cowplot()+xlab("effects of landscape (1/2 resolution)")+ylab("effects of landscape (baseline)")
-
-plot_half_con_SCRed;ggsave(paste0("plot_half_con_SCRed",format(Sys.time(), "%Y%m%d%H%M"),".pdf"),device="pdf",width=10,height=8,units="cm")
-
-
-
-prinaxis_dens_SCRed<-sma(SCRed_dens~reso_SCRed_dens,data=SCRed_tibble_all,V=cbind(SCRed_dens_se^2,reso_SCRed_dens_se^2))$coef[[1]]
 prinaxis_dens_ADCR<-sma(mle_dens~reso_mle_dens,data=res_wide_all,V=cbind(se_dens^2,reso_se_dens^2))$coef[[1]]
 
 plot_half_dens_ADCR<-ggplot(res_wide_all,aes(x=reso_mle_dens,y=mle_dens))+
@@ -657,14 +643,4 @@ plot_half_dens_ADCR<-ggplot(res_wide_all,aes(x=reso_mle_dens,y=mle_dens))+
 
 plot_half_dens_ADCR;ggsave(paste0("plot_half_dens_ADCR",format(Sys.time(), "%Y%m%d%H%M"),".pdf"),device="pdf",width=10,height=8,units="cm")
 
-
-plot_half_dens_SCRed<-ggplot(SCRed_tibble_all,aes(x=reso_SCRed_dens,y=SCRed_dens))+
-  geom_abline(slope=prinaxis_dens_SCRed[2,1],intercept=prinaxis_dens_SCRed[1,1],size=1,col="gray")+
-  geom_errorbar(aes(x=reso_SCRed_dens,ymin=SCRed_dens_lci,ymax=SCRed_dens_uci),size=0.05)+
-  geom_errorbar(aes(y=SCRed_dens,xmin=reso_SCRed_dens_lci,xmax=reso_SCRed_dens_uci),size=0.05)+
-  geom_abline(slope=1)+
-  geom_point(size=0.5)+
-  theme_cowplot()+xlab("log popul. density (1/2 resolution)")+ylab("log popul. density (baseline)")
-
-plot_half_dens_SCRed;ggsave(paste0("plot_half_dens_SCRed",format(Sys.time(), "%Y%m%d%H%M"),".pdf"),device="pdf",width=10,height=8,units="cm")
 
