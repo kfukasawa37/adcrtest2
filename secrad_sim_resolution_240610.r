@@ -1,4 +1,5 @@
-###################load packages and data
+###########1/2 resolution scenario
+###load packages and data
 library(rflsgen)
 library(tidyverse)
 library(foreach)
@@ -6,15 +7,14 @@ library(doParallel)
 library(ooplah)
 
 
-setwd(ifelse(version$os=="mingw32","L:/secradsim","/L/secradsim"))
 
 load("secrad_sim_220811.Rdata")	
 
 
-sourcepath<-ifelse(version$os=="mingw32","L:/secradsim/secrad.r","/L/secradsim/secrad.r")
+sourcepath<-"secrad.r"
 source(sourcepath)
 
-#####resolution down
+###resolution down
 xcoord0<-floor((xcoord-0.5)/2)*2+1.5
 ycoord0<-floor((ycoord-0.5)/2)*2+1.5
 
@@ -100,7 +100,7 @@ for(i in 1:niter){
 	cat(res_list[[i]]$par,"\n")
 }
 
-save.image("secrad_sim_estim_reso_220811.Rdata")	
+#save.image("secrad_sim_estim_reso_220811.Rdata")	
 
 
 
@@ -111,8 +111,6 @@ library(foreach)
 library(doParallel)
 library(ooplah)
 
-sourcepath<-"secrad.r"
-source(sourcepath)
 
 
 truepar<-sapply(sim_list,function(x) x$out_truepar())
