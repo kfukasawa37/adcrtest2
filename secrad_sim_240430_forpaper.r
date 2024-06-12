@@ -299,7 +299,7 @@ for(i in 1:niter){
 	
 
 SCRed_code<-SCRedreslist%>%sapply("[[","convergence")
-SCRed_con<-(-1)*unlist(SCRedreslist%>%lapply("[[","par")%>%lapply("[",4))
+SCRed_con<-unlist(SCRedreslist%>%lapply("[[","par")%>%lapply("[",4))
 SCRed_dens<-log(exp(unlist(SCRedreslist%>%lapply("[[","par")%>%lapply("[",3)))+sapply(sim_list,"[[","nind"))-log(ncell)
 
 
@@ -332,8 +332,8 @@ SCRed_tibble<-tibble(true_con=truepar_estim[3,],SCRed_con=SCRed_con,SCRed_con_se
 plot_SCRLCP_cost<-ggplot()+geom_point(data=SCRed_tibble%>%filter(SCRed_valid),aes(x=true_con,y=SCRed_con),size=1)+
 		geom_errorbar(data=SCRed_tibble%>%filter(SCRed_valid),aes(x=true_con,ymax=SCRed_con_uci,ymin=SCRed_con_lci),size=0.2)+
 		theme_cowplot()+
-		xlab("True effect of landscape\n on connectivity")+
-		ylab("(-1)×effect of landscape\n on cost by SCR-LCP")
+		xlab("True effect of landscape\n on permeability")+
+		ylab("Effect of landscape\n on cost by SCR-LCP")
 
 plot_SCRLCP_cost;ggsave(paste0("plot_SCRLCP_cost_",format(Sys.time(), "%Y%m%d%H%M"),".pdf"),device="pdf",width=9,height=8,units="cm")
 
