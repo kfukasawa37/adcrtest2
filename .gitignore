@@ -10,6 +10,13 @@
 .Ruserdata
 *.Rold
 *.Rprivate
+*.csv
+*.cpg
+*.dbf
+*.prj
+*.qpj
+*.shp
+*.shx
 
 #output files
 *.pdf
