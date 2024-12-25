@@ -121,7 +121,32 @@ SCRed.pois.2v<-function(par,sim_i,tdf1,g0offset=NULL,...){
 }
 
 
+
 SCRedres<-optim(SCRedinit,SCRed.pois.2v,sim_i=sim_i,tdf1=tdf1,ssbuffer=10,directions=4,g0offset=log(tdf1$Cov),hessian=T,control=list(maxit=1000))
+
+
+#Water only
+SCRed.pois.1v<-function(par,sim_i,tdf1,varname,g0offset=NULL,...){
+	cat(par,"\n")
+	ss<-data.frame(X=sim_i$coords[,"x"],Y=sim_i$coords[,"y"],Hab=unlist(sim_i$grid_cov[,varname]))
+	coordinates(ss)<- ~X+Y
+	gridded(ss) <- TRUE
+	r <- raster(ss, "Hab") 
+	XY<-as.matrix(coordinates(r))
+	par2<-par
+	if(!is.null(g0offset)){
+		par2<-as.list(par2)
+		par2[[1]]<-par2[[1]]+g0offset
+		class(par2)<-"list2"
+	}
+	SCRedLL<-SCRed.pois(par2,y=t(sim_i$obs[[1]]$detect),X=tdf1[,c("X","Y")],cov=r,G=XY,...)
+	cat(SCRedLL,"\n")
+	return(SCRedLL)
+}
+
+SCRedres_wtr<-optim(SCRedinit[-5],SCRed.pois.1v,sim_i=sim_i,tdf1=tdf1,varname="wtr",ssbuffer=10,directions=4,g0offset=log(tdf1$Cov),hessian=T,control=list(maxit=1000))
+
+
 
 
 #SECR
@@ -149,7 +174,7 @@ logdens_secr
 derived(secrres)[2,]*1000*1000/10000 #in km2
 
 
-#save.image("secrad_toyama_agri241206.Rdata")
+#save.image("secrad_toyama_agri241225.Rdata")
 
 
 
@@ -170,27 +195,27 @@ estimateSCRed<-tibble(name=parname,mle=mle,se=se,ci2.5=qnorm(0.025,mle,se),ci97.
 
 
 beta_all<-bind_rows(bind_cols(model="ADCR",estimate%>%filter(grepl("^beta",name))),
-                    bind_cols(model="SCR_LCP",estimateSCRed%>%filter(grepl("^beta",name)))
-)%>%bind_cols(Variable=rep(c("Agriculture","Water"),2))
+	bind_cols(model="SCR_LCP",estimateSCRed%>%filter(grepl("^beta",name)))
+	)%>%bind_cols(Variable=rep(c("Agriculture","Water"),2))
 
 beta<-beta%>%filter(model=="ADCR")
 
 labs<-c(beta_agri="Agriculture",beta_water="Water")
 toyama_coef_ADCR<-ggplot(beta)+geom_point(aes(x=Variable,y=mle),size=4)+
-  geom_errorbar(aes(x=Variable,ymin=ci2.5,ymax=ci97.5),size=1)+
-  geom_hline(yintercept=0)+
-  theme_cowplot()+
-  ylab("Effect of landscape on \n permeability by ADCR")
+	geom_errorbar(aes(x=Variable,ymin=ci2.5,ymax=ci97.5),size=1)+
+	geom_hline(yintercept=0)+
+	theme_cowplot()+
+	ylab("Effect of landscape on \n permeability by ADCR")
 
 toyama_coef_ADCR;ggsave(paste0("plot_coef_toyama_ADCR",format(Sys.time(), "%Y%m%d%H%M"),".pdf"),device="pdf",width=8,height=12,units="cm")
 
 beta_SCR_LCP<-beta_all%>%filter(model=="SCR_LCP")
 
 toyama_coef_SCR_LCP<-ggplot(beta_SCR_LCP)+geom_point(aes(x=Variable,y=mle),size=4)+
-  geom_errorbar(aes(x=Variable,ymin=ci2.5,ymax=ci97.5),size=1)+
-  geom_hline(yintercept=0)+
-  theme_cowplot()+
-  ylab("Effect of landscape on \n cost by SCR-LCP")
+	geom_errorbar(aes(x=Variable,ymin=ci2.5,ymax=ci97.5),size=1)+
+	geom_hline(yintercept=0)+
+	theme_cowplot()+
+	ylab("Effect of landscape on \n cost by SCR-LCP")
 
 toyama_coef_SCR_LCP;ggsave(paste0("plot_coef_toyama_SCRLCP",format(Sys.time(), "%Y%m%d%H%M"),".pdf"),device="pdf",width=8,height=12,units="cm")
 
@@ -201,9 +226,56 @@ colnames(secrad_hr)<-paste0("X",1:ncell)
 plotdata<-tibble(x=coords$x,y=coords$y,as.data.frame(secrad_hr))
 
 ggplot()+geom_tile(data=plotdata,aes(x=x,y=y,fill=X127))+
-  geom_point(data=data.frame(secrdata$coords,Hab=secrdata$grid_cov$wtr)%>%filter(Hab>quantile(Hab,0.75)),aes(x=x,y=y),size=0.005)+
-  geom_point(data=plotdata[127,],aes(x=x,y=y),color="red",size=2,pch=4)+
-  xlim(coords$x[127]+c(-10,10))+ylim(coords$y[128]+c(-10,10))+
-  scale_fill_viridis()+
-  theme_cowplot()
+	geom_point(data=data.frame(secrdata$coords,Hab=secrdata$grid_cov$wtr)%>%filter(Hab!=0),aes(x=x,y=y),size=0.005)+
+	geom_point(data=plotdata[127,],aes(x=x,y=y),color="red",size=2,pch=4)+
+	xlim(coords$x[127]+c(-10,10))+ylim(coords$y[128]+c(-10,10))+
+	scale_fill_gradient(name="Probability",low="ivory",high="#414487AA",limits=c(0,0.06))+
+	theme_cowplot()
+
+##Home range SCRed
+i<-6790
+
+costdist2<-function(alpha2,cov,G1,G2=NULL,directions=16){
+    if(is.null(G2)){
+     	G2<-G1
+     }
+    cost <- exp(alpha2[1] * cov[[1]]+alpha2[2]*cov[[2]])                                             
+    tr <- transition(cost, transitionFunction=function(x) (1/(mean(x))),  
+                     direction = directions)                              
+    trLayer <- geoCorrection(tr, scl = F)                                 
+    D <- costDistance(trLayer,as.matrix(G1),as.matrix(G2))
+    return(D)                  
+}
+
+ss<-data.frame(X=sim_i$coords[,"x"],Y=sim_i$coords[,"y"],agri=sim_i$grid_cov$agri,wtr=sim_i$grid_cov$wtr)
+coordinates(ss)<- ~X+Y
+gridded(ss) <- TRUE
+r1 <- raster(ss, "agri") 
+r2<- raster(ss, "wtr") 
+r<-list(r1,r2)
+Gall<-cbind(sim_i$coords[,"x"],sim_i$coords[,"y"])
+D_ed_all<-as.matrix(costdist2(SCRedres$par[4:5],r,Gall,directions=4))
+SCRed_hr<-exp(-exp(SCRedres$par[2])*D_ed_all^2)
+SCRed_hr_norm<-apply(SCRed_hr,1,sum)
+SCRed_hr<-SCRed_hr/outer(SCRed_hr_norm,rep(1,ncell))
+
+plotdata<-tibble(x=coords$x,y=coords$y,as.data.frame(SCRed_hr))
+
+ggplot()+geom_tile(data=plotdata,aes(x=x,y=y,fill=V127))+
+	geom_point(data=data.frame(secrdata$coords,Hab=secrdata$grid_cov$wtr)%>%filter(Hab!=0),aes(x=x,y=y),size=0.005)+
+	geom_point(data=plotdata[127,],aes(x=x,y=y),color="red",size=2,pch=4)+
+	xlim(coords$x[127]+c(-10,10))+ylim(coords$y[128]+c(-10,10))+
+	scale_fill_gradient(name="Probability",low="ivory",high="#414487AA",limits=c(0,0.06))+
+	theme_cowplot()
+
+
+
+#friction map
+mask<-st_convex_hull(st_union(st_as_sf(data.frame(secrdata$obs[[1]]$effort_coords),coords=c("x","y"))))
+within<-st_intersects(mask,st_as_sf(data.frame(coords),coords=c("x","y")))
+
+plotdata<-tibble(x=coords$x,y=coords$y,perm=secrad_res$par["conn_0"]+secrad_res$par["conn_wtr"]*secrdata$grid_cov$wtr+secrad_res$par["conn_agri"]*secrdata$grid_cov$agri)[within[[1]],]
+ggplot()+geom_tile(data=plotdata,aes(x=x,y=y,fill=perm))+
+	scale_fill_viridis()+
+	theme_cowplot()
 
