@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/608427420.svg)](https://doi.org/10.5281/zenodo.14583585)
+
 # adcrtest2
 R Code for "Fukasawa K. (in press) Mechanistic home range capture-recapture models for estimation of population density and landscape connectivity. Ecology"
 
