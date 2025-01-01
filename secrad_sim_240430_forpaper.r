@@ -201,7 +201,8 @@ table(bind_cols(s1=s1,s2=s2))
 i<-96;sim_list[[i]]$ggsecraddata(covname="X",sample=1);sim_list[[i]]$truemodel
 i<-8;j<-37;nobs<-length(sim_list[[i]]$sim_result$detect);nindall<-ncol(sim_list[[i]]$sim_result$detect[[1]]);sim_list[[i]]$ggsecradsim(ind=j);sim_list[[i]]$truemodel
 
-
+i<-76;j<-5;plot_sim<-ggsecradsim(sim_list[[i]],tile="X",ind=j)
+plot_sim;ggsave(paste0("plot_sim_",format(Sys.time(), "%Y%m%d%H%M"),".pdf"),device="pdf",width=9,height=8,units="cm")
 
 ##########NULL model
 envmodel_null<-list(D~1,C~1,A~0)

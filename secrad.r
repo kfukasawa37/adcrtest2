@@ -1577,7 +1577,8 @@ R6Class("secrad_data",
 				covname<-"prob"
 				tiletrans<-ptrans
 			}else{
-				z<-unlist(self$grid_cov[,covname])
+			  covname<-tile
+			  z<-unlist(self$grid_cov[,covname])
 				tiletrans<-"identity"
 			}
 			tiledata<-tibble(x=self$coords[,"x"],y=self$coords[,"y"],z=z)
@@ -1711,6 +1712,7 @@ ggsecradsim<-function(addata,ind=1,tile=NULL,occ=1,ptrans="identity"){
 		covname<-"prob"
 		tiletrans<-ptrans
 	}else{
+	  covname<-tile
 		z<-addata$grid_cov[,covname]
 		tiletrans<-"identity"
 	}
