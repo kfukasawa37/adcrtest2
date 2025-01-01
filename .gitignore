@@ -20,6 +20,7 @@
 
 #output files
 *.pdf
+*.svg
 
 # Example code in package build process
 *-Ex.R
